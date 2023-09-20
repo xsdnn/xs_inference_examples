@@ -34,6 +34,41 @@ namespace codegen {
         spdlog::info("Parse Model Completed");
     }
 
+    void OnnxModelHolder::GenerateXSFile() {
+        xs::GraphInfo* Graph = new xs::GraphInfo;
+
+        for (size_t i = 0; i < model_.graph().initializer_size(); ++i) {
+            const auto &Initializer = model_.graph().initializer(i);
+            if (!IsSupportedDataType(Initializer.data_type())) {
+                spdlog::warn("Initializer: " + Initializer.name() + " Not Converted. Data Type Mismatch!");
+                BadTensorCount++;
+                continue;
+            }
+
+            if (IsFloatDataType(Initializer.data_type())) {
+                xs::TensorInfo* Tensor = Graph->add_tensors();
+                Tensor->set_name(Initializer.name());
+                SetDimTensor2Tensor(&Initializer, Tensor);
+
+                float weight;
+                const char* data = Initializer.raw_data().c_str();
+                for (size_t s = 0; s < GetTensorSize(Initializer) * sizeof(float); s += sizeof(float)) {
+                    char d[] = {data[s + 0], data[s + 1], data[s + 2], data[s + 3]};
+                    memcpy(&weight, &d, sizeof(float));
+                    Tensor->add_float_data(weight);
+                }
+            } else {
+                throw std::runtime_error("Not Implemented yet supporting for this data-type");
+            }
+        }
+
+        std::ofstream ofs(model_path_ + ".xs_tensor", std::ios_base::out | std::ios_base::binary);
+        Graph->SerializeToOstream(&ofs);
+        OutputFileSize = ofs.tellp();
+
+        PrintSummary();
+    }
+
     void OnnxModelHolder::GenerateHFile() {
         GenerateHeader();
         GenerateAllWeights();
@@ -136,18 +171,26 @@ namespace codegen {
         spdlog::info("Num Succesfully Tensor Writed: " + std::to_string(model_.graph().initializer_size() - BadTensorCount));
         spdlog::info("Total File Size: " + std::to_string(OutputFileSize) + " bytes");
     }
+
+    void OnnxModelHolder::SetDimTensor2Tensor(const onnx::TensorProto *src, xs::TensorInfo *dst) {
+        for (size_t i = 0; i < src->dims_size(); ++i) {
+            dst->add_dims(src->dims(i));
+        }
+    }
 }
 
 namespace cli {
     void display_usage() {
         std::cout
         << "ONNX Codegen Weights Tool\n"
-        << "\t--model_name, -m Path to onnx model file"
+        << "\t--model_name, -m Path to onnx model file\n"
+        << "\t--xs, -x Generate output Xs Graph Tensor instead of .h weights file"
         << "\n";
     }
 
     struct Settings {
         std::string model_name;
+        bool        xs = false;
     };
 
     Settings ParseArgument(int argc, char** argv) {
@@ -157,13 +200,14 @@ namespace cli {
         while (true) {
             static struct option long_options[] = {
                     {"model_name", required_argument, nullptr, 'm'},
+                    {"xs", required_argument, nullptr, 'x'},
                     {"help", no_argument, nullptr, 'h'},
                     {nullptr, 0, nullptr, 0}};
 
             /* getopt_long stores the option index here. */
             int option_index = 0;
 
-            c = getopt_long(argc, argv, "m:h",
+            c = getopt_long(argc, argv, "m:x:h",
                             long_options, &option_index);
 
             /* Detect the end of the options. */
@@ -172,6 +216,9 @@ namespace cli {
             switch (c) {
                 case 'm':
                     s.model_name = optarg;
+                    break;
+                case 'x':
+                    s.xs = strtol(optarg, nullptr, 10);;
                     break;
                 case 'h':
                 case '?':
@@ -190,5 +237,9 @@ namespace cli {
 int main(int argc, char** argv) {
     cli::Settings S = cli::ParseArgument(argc, argv);
     codegen::OnnxModelHolder MH(S.model_name);
-    MH.GenerateHFile();
+    if (S.xs) {
+        MH.GenerateXSFile();
+    } else {
+        MH.GenerateHFile();
+    }
 }

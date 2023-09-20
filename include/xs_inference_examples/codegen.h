@@ -12,6 +12,8 @@
 
 #include <string>
 #include "onnx.proto3.pb.h"
+#include "xs.proto3.pb.h"
+
 
 namespace codegen {
 
@@ -21,6 +23,7 @@ public:
 
 public:
     void GenerateHFile();
+    void GenerateXSFile();
 
 private:
     void ParseModel(std::string model_path);
@@ -33,6 +36,7 @@ private:
     size_t GetTensorSize(const onnx::TensorProto& tensor);
     void SaveToOutputFile();
     void PrintSummary();
+    void SetDimTensor2Tensor(const onnx::TensorProto* src, xs::TensorInfo* dst);
 
 private:
     std::string model_path_;

@@ -8,6 +8,9 @@
 namespace models {
 
 xsdnn::network<xsdnn::graph> FP32SsdMobileNetV1_1_default_1() {
+    xsdnn::network<xsdnn::sequential> net;
+    xsdnn::fully_connected fc(10, 10);
+
 
 }
 
