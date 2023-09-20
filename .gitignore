@@ -34,3 +34,5 @@
 .idea/
 cmake-build-debug/
 cmake-build-release/
+include/xs_inference_examples/onnx.proto3.pb.h
+include/xs_inference_examples/onnx.proto3.pb.cc
