@@ -38,3 +38,5 @@ include/xs_inference_examples/onnx.proto3.pb.h
 include/xs_inference_examples/onnx.proto3.pb.cc
 include/xs_inference_examples/xs.proto3.pb.h
 include/xs_inference_examples/xs.proto3.pb.cc
+
+build/
