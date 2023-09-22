@@ -10,10 +10,9 @@
 #ifndef XS_INFERENCE_EXAMPLES_CODEGEN_H
 #define XS_INFERENCE_EXAMPLES_CODEGEN_H
 
+#include <xsdnn/xsdnn.h>
 #include <string>
 #include "onnx.proto3.pb.h"
-#include "xs.proto3.pb.h"
-
 
 namespace codegen {
 
