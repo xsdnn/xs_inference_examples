@@ -9,6 +9,13 @@ set(PROJECT_MODELS "${PROJECT_SRC}/models")
 set(PROJECT_THIRD_PARTY "${PROJECT_ROOT}/third_party")
 
 execute_process(COMMAND protoc -I ${PROJECT_THIRD_PARTY}/onnx/onnx --cpp_out=${PROJECT_INCLUDE}/xs_inference_examples onnx.proto3)
+add_compile_definitions(XS_USE_SERIALIZATION)
+add_compile_definitions(XS_USE_XNNPACK)
+
+SET(XNNPACK_SOURCE_DIR "../xsdnn/build/xnnpack-source")
+INCLUDE_DIRECTORIES("${XNNPACK_SOURCE_DIR}/include")
+INCLUDE_DIRECTORIES("../xsdnn/build/pthreadpool-source/include")
+ADD_COMPILE_DEFINITIONS(XS_USE_XNNPACK)
 
 IF(NOT DEFINED GOOGLEBENCHMARK_SOURCE_DIR)
     MESSAGE(STATUS "Downloading Google Benchmark to ${CMAKE_BINARY_DIR}/googlebenchmark-source (define GOOGLEBENCHMARK_SOURCE_DIR to avoid it)")
@@ -46,14 +53,14 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${EXTRA_C_
 
 
 
-add_executable(codegen ${PROJECT_SRC}/codegen.cc ${onnx_src_common})
-target_link_libraries(codegen protobuf absl_log_internal_message absl_log_internal_check_op xsdnn)
+#add_executable(codegen ${PROJECT_SRC}/codegen.cc ${onnx_src_common})
+#target_link_libraries(codegen xsdnn protobuf)
 
 add_library(xs_models
-        ${PROJECT_MODELS}/ssd_mobilenet_v1_1_default_1.cc)
+       ${PROJECT_MODELS}/ssd_mobilenet_v1_1_default_1.cc)
 
 add_executable(label_image ${PROJECT_SRC}/label_image.cc)
-target_link_libraries(label_image xsdnn xs_models protobuf absl_log_internal_message absl_log_internal_check_op)
+target_link_libraries(label_image xs_models xsdnn protobuf XNNPACK cpuinfo pthreadpool)
 
 IF(NOT TARGET benchmark)
     SET(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
@@ -65,4 +72,7 @@ ENDIF()
 set(BENCH_UTILS ${PROJECT_SRC}/bench/utils.cc)
 
 add_executable(f32_conv_bench ${PROJECT_SRC}/bench/f32_conv.cc ${BENCH_UTILS})
-target_link_libraries(f32_conv_bench benchmark xsdnn protobuf)
+target_link_libraries(f32_conv_bench benchmark xsdnn protobuf XNNPACK cpuinfo pthreadpool)
+
+add_executable(f32_ssd_small_bench ${PROJECT_SRC}/bench/ssd_mobilenet_v1_1_default_1.cc ${BENCH_UTILS})
+target_link_libraries(f32_ssd_small_bench benchmark xs_models xsdnn protobuf XNNPACK cpuinfo pthreadpool)

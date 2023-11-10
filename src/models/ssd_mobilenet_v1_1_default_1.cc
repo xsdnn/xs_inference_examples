@@ -13,10 +13,9 @@ size_t GetTensorSize(const xs::TensorInfo* tensor) {
 }
 
 bool InitModelTensor(const xs::TensorInfo* src, mat_t* dst) {
-    if (GetTensorSize(src) != dst->size()) return 0;
-    for (size_t i = 0; i < dst->size(); ++i) {
-        dst->at(i) = src->float_data(i);
-    }
+    if (GetTensorSize(src) * sizeof(float) != dst->size()) return 0; // FIXME: сделать это для более частного случая
+    const std::string& DataRaw = src->raw_data();
+    std::copy(DataRaw.begin(), DataRaw.end(), dst->data());
     return 1;
 }
 
@@ -30,7 +29,7 @@ spdlog::info("Tensor Name: " + src_name + " initialized");
 
 namespace models {
 
-bool FP32SsdMobileNetV1_1_default_1(xsdnn::network<xsdnn::graph>* net) {
+bool FP32SsdMobileNetV1_1_default_1(xsdnn::network* net) {
     TensorHolder TH("ssd_mobilenet_v1_1_default_1_dequantize_onnx.xs_tensor");
 
     /*
@@ -40,117 +39,117 @@ bool FP32SsdMobileNetV1_1_default_1(xsdnn::network<xsdnn::graph>* net) {
     static conv Conv2d_0(/*in_shape=*/shape3d(3, 300, 300), /*out_channel=*/24, /*kernel_shape=*/{3, 3},
                   /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{2, 2}, /*dilation_shape=*/{1, 1},
                   /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 1, 1}, /*activation_type=*/mmpack::Relu,
-                  /*engine=*/core::backend_t::xs);
+                  /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_1_Depthwise(/*in_shape=*/Conv2d_0.out_shape()[0], /*out_channel=*/24, /*kernel_shape=*/{3, 3},
                             /*group_count=*/24, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_1_Pointwise(/*in_shape=*/Conv2d_1_Depthwise.out_shape()[0], /*out_channel=*/48, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_2_Depthwise(/*in_shape=*/Conv2d_1_Pointwise.out_shape()[0], /*out_channel=*/48, /*kernel_shape=*/{3, 3},
                             /*group_count=*/48, /*has_bias=*/true, /*stride_shape=*/{2, 2}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_2_Pointwise(/*in_shape=*/Conv2d_2_Depthwise.out_shape()[0], /*out_channel=*/96, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_3_Depthwise(/*in_shape=*/Conv2d_2_Pointwise.out_shape()[0], /*out_channel=*/96, /*kernel_shape=*/{3, 3},
                             /*group_count=*/96, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_3_Pointwise(/*in_shape=*/Conv2d_3_Depthwise.out_shape()[0], /*out_channel=*/96, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_4_Depthwise(/*in_shape=*/Conv2d_3_Pointwise.out_shape()[0], /*out_channel=*/96, /*kernel_shape=*/{3, 3},
                             /*group_count=*/96, /*has_bias=*/true, /*stride_shape=*/{2, 2}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_4_Pointwise(/*in_shape=*/Conv2d_4_Depthwise.out_shape()[0], /*out_channel=*/192, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_5_Depthwise(/*in_shape=*/Conv2d_4_Pointwise.out_shape()[0], /*out_channel=*/192, /*kernel_shape=*/{3, 3},
                             /*group_count=*/192, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_5_Pointwise(/*in_shape=*/Conv2d_5_Depthwise.out_shape()[0], /*out_channel=*/192, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_6_Depthwise(/*in_shape=*/Conv2d_5_Pointwise.out_shape()[0], /*out_channel=*/192, /*kernel_shape=*/{3, 3},
                             /*group_count=*/192, /*has_bias=*/true, /*stride_shape=*/{2, 2}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_6_Pointwise(/*in_shape=*/Conv2d_6_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_7_Depthwise(/*in_shape=*/Conv2d_6_Pointwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{3, 3},
                             /*group_count=*/384, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_7_Pointwise(/*in_shape=*/Conv2d_7_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_8_Depthwise(/*in_shape=*/Conv2d_7_Pointwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{3, 3},
                             /*group_count=*/384, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_8_Pointwise(/*in_shape=*/Conv2d_8_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_9_Depthwise(/*in_shape=*/Conv2d_8_Pointwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{3, 3},
                             /*group_count=*/384, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_9_Pointwise(/*in_shape=*/Conv2d_9_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_10_Depthwise(/*in_shape=*/Conv2d_9_Pointwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{3, 3},
                             /*group_count=*/384, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_10_Pointwise(/*in_shape=*/Conv2d_10_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_11_Depthwise(/*in_shape=*/Conv2d_10_Pointwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{3, 3},
                             /*group_count=*/384, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{1, 1, 1, 1}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     static conv Conv2d_11_Pointwise(/*in_shape=*/Conv2d_11_Depthwise.out_shape()[0], /*out_channel=*/384, /*kernel_shape=*/{1, 1},
                             /*group_count=*/1, /*has_bias=*/true, /*stride_shape=*/{1, 1}, /*dilation_shape=*/{1, 1},
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
-                            /*engine=*/core::backend_t::xs);
+                            /*engine=*/core::backend_t::xnnpack);
 
     /*
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -240,24 +239,24 @@ bool FP32SsdMobileNetV1_1_default_1(xsdnn::network<xsdnn::graph>* net) {
     connect_subgraph(Conv2d_2_Pointwise, Conv2d_2_Depthwise);
     connect_subgraph(Conv2d_3_Depthwise, Conv2d_2_Pointwise);
     connect_subgraph(Conv2d_3_Pointwise, Conv2d_3_Depthwise);
-    connect_subgraph(Conv2d_4_Depthwise, Conv2d_3_Pointwise);
-    connect_subgraph(Conv2d_4_Pointwise, Conv2d_4_Depthwise);
-    connect_subgraph(Conv2d_5_Depthwise, Conv2d_4_Pointwise);
-    connect_subgraph(Conv2d_5_Pointwise, Conv2d_5_Depthwise);
-    connect_subgraph(Conv2d_6_Depthwise, Conv2d_5_Pointwise);
-    connect_subgraph(Conv2d_6_Pointwise, Conv2d_6_Depthwise);
-    connect_subgraph(Conv2d_7_Depthwise, Conv2d_6_Pointwise);
-    connect_subgraph(Conv2d_7_Pointwise, Conv2d_7_Depthwise);
-    connect_subgraph(Conv2d_8_Depthwise, Conv2d_7_Pointwise);
-    connect_subgraph(Conv2d_8_Pointwise, Conv2d_8_Depthwise);
-    connect_subgraph(Conv2d_9_Depthwise, Conv2d_8_Pointwise);
-    connect_subgraph(Conv2d_9_Pointwise, Conv2d_9_Depthwise);
-    connect_subgraph(Conv2d_10_Depthwise, Conv2d_9_Pointwise);
-    connect_subgraph(Conv2d_10_Pointwise, Conv2d_10_Depthwise);
-    connect_subgraph(Conv2d_11_Depthwise, Conv2d_10_Pointwise);
-    connect_subgraph(Conv2d_11_Pointwise, Conv2d_11_Depthwise);
+//    connect_subgraph(Conv2d_4_Depthwise, Conv2d_3_Pointwise);
+//    connect_subgraph(Conv2d_4_Pointwise, Conv2d_4_Depthwise);
+//    connect_subgraph(Conv2d_5_Depthwise, Conv2d_4_Pointwise);
+//    connect_subgraph(Conv2d_5_Pointwise, Conv2d_5_Depthwise);
+//    connect_subgraph(Conv2d_6_Depthwise, Conv2d_5_Pointwise);
+//    connect_subgraph(Conv2d_6_Pointwise, Conv2d_6_Depthwise);
+//    connect_subgraph(Conv2d_7_Depthwise, Conv2d_6_Pointwise);
+//    connect_subgraph(Conv2d_7_Pointwise, Conv2d_7_Depthwise);
+//    connect_subgraph(Conv2d_8_Depthwise, Conv2d_7_Pointwise);
+//    connect_subgraph(Conv2d_8_Pointwise, Conv2d_8_Depthwise);
+//    connect_subgraph(Conv2d_9_Depthwise, Conv2d_8_Pointwise);
+//    connect_subgraph(Conv2d_9_Pointwise, Conv2d_9_Depthwise);
+//    connect_subgraph(Conv2d_10_Depthwise, Conv2d_9_Pointwise);
+//    connect_subgraph(Conv2d_10_Pointwise, Conv2d_10_Depthwise);
+//    connect_subgraph(Conv2d_11_Depthwise, Conv2d_10_Pointwise);
+//    connect_subgraph(Conv2d_11_Pointwise, Conv2d_11_Depthwise);
 
-    construct_graph(*net, {&Conv2d_0}, {&Conv2d_11_Pointwise});
+    construct_graph(*net, {&Conv2d_0}, {&Conv2d_3_Pointwise});
     return 1;
 }
 

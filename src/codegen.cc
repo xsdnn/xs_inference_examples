@@ -49,14 +49,8 @@ namespace codegen {
                 xs::TensorInfo* Tensor = Graph->add_tensors();
                 Tensor->set_name(Initializer.name());
                 SetDimTensor2Tensor(&Initializer, Tensor);
-
-                float weight;
-                const char* data = Initializer.raw_data().c_str();
-                for (size_t s = 0; s < GetTensorSize(Initializer) * sizeof(float); s += sizeof(float)) {
-                    char d[] = {data[s + 0], data[s + 1], data[s + 2], data[s + 3]};
-                    memcpy(&weight, &d, sizeof(float));
-                    Tensor->add_float_data(weight);
-                }
+                std::string* MutableRawData = Tensor->mutable_raw_data();
+                MutableRawData->assign(Initializer.raw_data().c_str());
             } else {
                 throw std::runtime_error("Not Implemented yet supporting for this data-type");
             }

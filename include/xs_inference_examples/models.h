@@ -36,7 +36,7 @@ struct TensorHolder {
 
 namespace models {
 
-bool FP32SsdMobileNetV1_1_default_1(xsdnn::network<xsdnn::graph>* net);
+bool FP32SsdMobileNetV1_1_default_1(xsdnn::network* net);
 
 } // models
 

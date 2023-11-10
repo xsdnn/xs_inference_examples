@@ -2,24 +2,32 @@
 // Created by rozhin on 14.09.2023.
 // Copyright (c) 2021-2023 xsdnn. All rights reserved.
 //
-
+#include <xsdnn/gsl/span>
 #include <xs_inference_examples/models.h>
 #include <sys/time.h>
 
 mat_t GetUniformRandomData(size_t tensor_size) {
-    mat_t Tensor(tensor_size);
+    mat_t Tensor(tensor_size * sizeof(float));
     for (size_t i = 0; i < tensor_size; ++i) {
-        Tensor[i] = uniform_rand(-10, 10);
+        Tensor[i] = 'a';
+    }
+}
+
+void random_init_fp32(xsdnn::mat_t& X) {
+    gsl::span<float> XSpan = xsdnn::GetMutableDataAsSpan<float>(&X);
+    for (size_t i = 0; i < XSpan.size() / sizeof(float); ++i) {
+        XSpan[i] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
     }
 }
 
 int main() {
-    xsdnn::network<xsdnn::graph> net("FP32SsdMobileNetV1_1_default_1");
+    xsdnn::network net("FP32SsdMobileNetV1_1_default_1");
     if (!models::FP32SsdMobileNetV1_1_default_1(&net)) throw xs_error("Error");
-    mat_t Input = GetUniformRandomData(3 * 300 * 300);
+    mat_t Input(300*300*3 * sizeof(float));
+    random_init_fp32(Input);
 
-    net.set_num_threads(12);
-
+    net.set_num_threads(1);
+    net.configure();
     double sum_time_taken = 0;
     for (size_t i = 0; i < 100; ++i) {
         struct timeval start, end;
@@ -40,7 +48,7 @@ int main() {
     }
 
     std::cout << "Mean Time taken by program is : " << std::fixed
-              << sum_time_taken / double(100.0) << std::setprecision(6);
+              << sum_time_taken / double(100.0);
     std::cout << " sec" << std::endl;
 
 
