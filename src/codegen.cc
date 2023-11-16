@@ -50,12 +50,11 @@ namespace codegen {
                 Tensor->set_name(Initializer.name());
                 SetDimTensor2Tensor(&Initializer, Tensor);
                 std::string* MutableRawData = Tensor->mutable_raw_data();
-                MutableRawData->assign(Initializer.raw_data().c_str());
+                MutableRawData->assign(Initializer.raw_data());
             } else {
                 throw std::runtime_error("Not Implemented yet supporting for this data-type");
             }
         }
-
         std::ofstream ofs(model_path_ + ".xs_tensor", std::ios_base::out | std::ios_base::binary);
         Graph->SerializeToOstream(&ofs);
         OutputFileSize = ofs.tellp();

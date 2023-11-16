@@ -15,6 +15,7 @@ size_t GetTensorSize(const xs::TensorInfo* tensor) {
 bool InitModelTensor(const xs::TensorInfo* src, mat_t* dst) {
     if (GetTensorSize(src) * sizeof(float) != dst->size()) return 0; // FIXME: сделать это для более частного случая
     const std::string& DataRaw = src->raw_data();
+    assert(DataRaw.size() == dst->size());
     std::copy(DataRaw.begin(), DataRaw.end(), dst->data());
     return 1;
 }
@@ -151,11 +152,43 @@ bool FP32SsdMobileNetV1_1_default_1(xsdnn::network* net) {
                             /*pad_type=*/padding_mode::notset, /*pads=*/{0, 0, 0, 0}, /*activation_type=*/mmpack::Relu,
                             /*engine=*/core::backend_t::xnnpack);
 
+
     /*
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *                                                   LAYER INITIALIZATION                                              *
+     *                                                   NETWORK CONSTRUCTION                                              *
      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
      */
+
+    connect_subgraph(Conv2d_1_Depthwise, Conv2d_0);
+    connect_subgraph(Conv2d_1_Pointwise, Conv2d_1_Depthwise);
+    connect_subgraph(Conv2d_2_Depthwise, Conv2d_1_Pointwise);
+    connect_subgraph(Conv2d_2_Pointwise, Conv2d_2_Depthwise);
+    connect_subgraph(Conv2d_3_Depthwise, Conv2d_2_Pointwise);
+    connect_subgraph(Conv2d_3_Pointwise, Conv2d_3_Depthwise);
+    connect_subgraph(Conv2d_4_Depthwise, Conv2d_3_Pointwise);
+    connect_subgraph(Conv2d_4_Pointwise, Conv2d_4_Depthwise);
+    connect_subgraph(Conv2d_5_Depthwise, Conv2d_4_Pointwise);
+    connect_subgraph(Conv2d_5_Pointwise, Conv2d_5_Depthwise);
+    connect_subgraph(Conv2d_6_Depthwise, Conv2d_5_Pointwise);
+    connect_subgraph(Conv2d_6_Pointwise, Conv2d_6_Depthwise);
+    connect_subgraph(Conv2d_7_Depthwise, Conv2d_6_Pointwise);
+    connect_subgraph(Conv2d_7_Pointwise, Conv2d_7_Depthwise);
+    connect_subgraph(Conv2d_8_Depthwise, Conv2d_7_Pointwise);
+    connect_subgraph(Conv2d_8_Pointwise, Conv2d_8_Depthwise);
+    connect_subgraph(Conv2d_9_Depthwise, Conv2d_8_Pointwise);
+    connect_subgraph(Conv2d_9_Pointwise, Conv2d_9_Depthwise);
+    connect_subgraph(Conv2d_10_Depthwise, Conv2d_9_Pointwise);
+    connect_subgraph(Conv2d_10_Pointwise, Conv2d_10_Depthwise);
+    connect_subgraph(Conv2d_11_Depthwise, Conv2d_10_Pointwise);
+    connect_subgraph(Conv2d_11_Pointwise, Conv2d_11_Depthwise);
+
+    construct_graph(*net, {&Conv2d_0}, {&Conv2d_3_Pointwise});
+
+    /*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                   LAYER INITIALIZATION                                              *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ */
     std::string src_name;
     INIT_MODEL_TENSOR("const_fold_opt__629", Conv2d_0.weights()[0])
     INIT_MODEL_TENSOR("FeatureExtractor/MobilenetV1/MobilenetV1/Conv2d_0/Conv2D_Fold_bias_dequant__153", Conv2d_0.weights()[1])
@@ -226,37 +259,6 @@ bool FP32SsdMobileNetV1_1_default_1(xsdnn::network* net) {
     INIT_MODEL_TENSOR("const_fold_opt__642", Conv2d_11_Pointwise.weights()[0])
     INIT_MODEL_TENSOR("FeatureExtractor/MobilenetV1/MobilenetV1/Conv2d_11_pointwise/Conv2D_Fold_bias_dequant__145", Conv2d_11_Pointwise.weights()[1])
 
-
-    /*
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     *                                                   NETWORK CONSTRUCTION                                              *
-     * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-     */
-
-    connect_subgraph(Conv2d_1_Depthwise, Conv2d_0);
-    connect_subgraph(Conv2d_1_Pointwise, Conv2d_1_Depthwise);
-    connect_subgraph(Conv2d_2_Depthwise, Conv2d_1_Pointwise);
-    connect_subgraph(Conv2d_2_Pointwise, Conv2d_2_Depthwise);
-    connect_subgraph(Conv2d_3_Depthwise, Conv2d_2_Pointwise);
-    connect_subgraph(Conv2d_3_Pointwise, Conv2d_3_Depthwise);
-//    connect_subgraph(Conv2d_4_Depthwise, Conv2d_3_Pointwise);
-//    connect_subgraph(Conv2d_4_Pointwise, Conv2d_4_Depthwise);
-//    connect_subgraph(Conv2d_5_Depthwise, Conv2d_4_Pointwise);
-//    connect_subgraph(Conv2d_5_Pointwise, Conv2d_5_Depthwise);
-//    connect_subgraph(Conv2d_6_Depthwise, Conv2d_5_Pointwise);
-//    connect_subgraph(Conv2d_6_Pointwise, Conv2d_6_Depthwise);
-//    connect_subgraph(Conv2d_7_Depthwise, Conv2d_6_Pointwise);
-//    connect_subgraph(Conv2d_7_Pointwise, Conv2d_7_Depthwise);
-//    connect_subgraph(Conv2d_8_Depthwise, Conv2d_7_Pointwise);
-//    connect_subgraph(Conv2d_8_Pointwise, Conv2d_8_Depthwise);
-//    connect_subgraph(Conv2d_9_Depthwise, Conv2d_8_Pointwise);
-//    connect_subgraph(Conv2d_9_Pointwise, Conv2d_9_Depthwise);
-//    connect_subgraph(Conv2d_10_Depthwise, Conv2d_9_Pointwise);
-//    connect_subgraph(Conv2d_10_Pointwise, Conv2d_10_Depthwise);
-//    connect_subgraph(Conv2d_11_Depthwise, Conv2d_10_Pointwise);
-//    connect_subgraph(Conv2d_11_Pointwise, Conv2d_11_Depthwise);
-
-    construct_graph(*net, {&Conv2d_0}, {&Conv2d_3_Pointwise});
     return 1;
 }
 

@@ -76,7 +76,7 @@ void fp32_convolution(benchmark::State& state, const char*) {
                         /*activation_type=*/activation_type, /*engine=*/engine);
 
     ConvOp.set_parallelize(false);
-    ConvOp.set_num_threads(1);
+    ConvOp.set_num_threads(12);
     ConvOp.setup(true);
     ConvOp.set_in_data({{ input }});
 
@@ -92,15 +92,15 @@ static void SsdMobileNetV1_1_VerySmall(benchmark::internal::Benchmark* b) {
 
     /*************************** Conv 0 **************************/
     /*       C    H    W    Cout    Kh    Kw     Gc     Bias     Sh    Sw    Dh   Dw   PHtop  PWleft   PHbottom    PWright    Activation    Engine */
-    b->Args({3, 300, 300,     24,     3,    3,     1,       1,     2,   2,    1,   1,      0,      0,         1,         1,            1,        1});
+    b->Args({3, 300, 300,     24,     3,    3,     1,       1,     2,   2,    1,   1,      0,      0,         1,         1,            0,        1});
 
     /*************************** Conv 1DP ************************/
-    b->Args({24,150, 150,     24,     3,    3,    24,       1,     1,   1,    1,   1,      1,      1,         1,         1,            1,        1});
-    b->Args({24,150, 150,     48,     1,    1,     1,       1,     1,   1,    1,   1,      0,      0,         0,         0,            1,        1});
+    b->Args({24,150, 150,     24,     3,    3,    24,       1,     1,   1,    1,   1,      1,      1,         1,         1,            0,        1});
+    b->Args({24,150, 150,     48,     1,    1,     1,       1,     1,   1,    1,   1,      0,      0,         0,         0,            0,        1});
 
     /*************************** Conv 2DP ************************/
-    b->Args({48,150, 150,     48,     3,    3,    48,       1,     2,   2,    1,   1,      0,      0,         1,         1,            1,        1});
-    b->Args({48, 75,  75,     96,     1,    1,     1,       1,     1,   1,    1,   1,      0,      0,         0,         0,            1,        1});
+    b->Args({48,150, 150,     48,     3,    3,    48,       1,     2,   2,    1,   1,      0,      0,         1,         1,            0,        1});
+    b->Args({48, 75,  75,     96,     1,    1,     1,       1,     1,   1,    1,   1,      0,      0,         0,         0,            0,        1});
 }
 
 BENCHMARK_CAPTURE(fp32_convolution, SsdMobilenetV1_1_Default, "SsdMobilenetV1")->Apply(SsdMobileNetV1_1_VerySmall)->UseRealTime()->Unit(benchmark::kMicrosecond);

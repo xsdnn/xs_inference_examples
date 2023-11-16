@@ -22,11 +22,12 @@ void random_init_fp32(xsdnn::mat_t& X) {
 
 int main() {
     xsdnn::network net("FP32SsdMobileNetV1_1_default_1");
+    xnn_status status = xnn_initialize(nullptr);
     if (!models::FP32SsdMobileNetV1_1_default_1(&net)) throw xs_error("Error");
     mat_t Input(300*300*3 * sizeof(float));
     random_init_fp32(Input);
 
-    net.set_num_threads(1);
+    net.set_num_threads(12);
     net.configure();
     double sum_time_taken = 0;
     for (size_t i = 0; i < 100; ++i) {

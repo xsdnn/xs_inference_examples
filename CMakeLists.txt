@@ -53,8 +53,8 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${EXTRA_C_
 
 
 
-#add_executable(codegen ${PROJECT_SRC}/codegen.cc ${onnx_src_common})
-#target_link_libraries(codegen xsdnn protobuf)
+add_executable(codegen ${PROJECT_SRC}/codegen.cc ${onnx_src_common})
+target_link_libraries(codegen xsdnn protobuf)
 
 add_library(xs_models
        ${PROJECT_MODELS}/ssd_mobilenet_v1_1_default_1.cc)
